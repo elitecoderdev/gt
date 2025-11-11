@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                                   http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                        http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd                http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <routeContext id="persistenciasCtx" xmlns="http://camel.apache.org/schema/spring">
+        <!--<route id="_persistDocEstadoAcp">
+            <from id="_fromDocEstadoAcp" uri="direct:docEstadoAcp"/>
+            <doTry id="_doTryDocEstadoAcp">
+                <bean id="_beanPersistdocEstadsoa"
+                    method="persistDocEstadoAcp" ref="_beanPersistDocEstadoBean"/>
+                <doCatch id="_doCatchDocEstadoAcp">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocEstadoAcp">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_ESTADO}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocEstadoAcp" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>-->
+        <route id="_persistDocEstado">
+            <from id="_fromDocEstado" uri="direct:docEstado"/>
+            <doTry id="_doTryDocEstado">
+                <bean id="_beanPersistDocEstadoa"
+                    method="persistDocEstado" ref="_beanPersistDocEstadoBean"/>
+                <doCatch id="_doCatchDocEstado">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocEstado">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_ESTADO}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocEstado" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+
+        <route id="_persistDocCargos">
+            <from id="_fromDocCargos" uri="direct:DocCargos"/>
+            <doTry id="_doTryDocCargos">
+                <bean id="_beanPersistDocCargosa"
+                    method="persistDocCargos" ref="_beanPersistCargosBean"/>
+                <doCatch id="_doCatchDocCargos">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocCargos">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_CARGOS}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocCargos" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persistDocImagen">
+            <from id="_fromDocImagen" uri="direct:docImagen"/>
+            <doTry id="_doTryDocImagen">
+                <bean id="_beanPersistDocImagen"
+                    method="persistDocImagen" ref="_beanPersistDocImagenBean"/>
+                <doCatch id="_doCatchDocImagen">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocImagen">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_IMAGEN}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocImagen" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persistDocTransbordos">
+            <from id="_fromDocTransbordos" uri="direct:docTransbordos"/>
+            <doTry id="_doTryDocTransbordos">
+                <bean id="_idbeanPersistDocTransbordos"
+                    method="persistDocTransbordos" ref="_beanPersistDocTransbordosBean"/>
+                <doCatch id="_doCatchDocTransbordos">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocTransbordos">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_TRANSBORDOS}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocTransbordos" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persistDocVistosBuenos">
+            <from id="_fromDocVistosBuenos" uri="direct:docVistosBuenos"/>
+            <doTry id="_doTryDocVistosBuenos">
+                <bean id="_idbeanPersistVistosBuenos"
+                    method="persistDocVistosBuenos" ref="_beanPersistDocVistosBuenosBean"/>
+                <doCatch id="_doCatchDocVistosBuenos">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocVistosBuenos">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_VISTOS_BUENOS}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocVistosBuenos" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persistDocTransGuiaCourier">
+            <from id="_fromDocTransGuiaCourier" uri="direct:docTransGuiaCourier"/>
+            <doTry id="_doTrydocTransGuiaCorueri">
+                <bean id="_beanPersistDocTransGuiaCouriera"
+                    method="persistDocTransGuiaCourier" ref="_beanPersistDocTransGuiaCourier"/>
+                <doCatch id="_doCatchDocTransGuiaCourier">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocTransGuiaCourier">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_DOC_TRANS_GUIA_COURIER}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocTransGuiaCourier" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persistDocTransporte">
+            <from id="_fromDocTransporte" uri="direct:docTransporte"/>
+            <doTry id="_doTrydocTransporte">
+                <bean id="_beanPersistDocTranspaorte"
+                    method="persistDocTransporte" ref="_beanPersistDocTransporte"/>
+                <doCatch id="_doCatchDocTransporte">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorDocTransporte">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_DOC_TRANSPORTE}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorDocTransporte" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persisteItems">
+            <from id="_fromItems" uri="direct:items"/>
+            <doTry id="_doTryItems">
+                <bean id="_beanPersistItems" method="persistItems" ref="_beanPersistItems"/>
+                <doCatch id="_doCatchItems">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorItems">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_ITEMS}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorItems" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persisteParticipaciones">
+            <from id="_from2as" uri="direct:participaciones"/>
+            <doTry id="_doTryParticipaciones">
+                <bean id="_beanPersistLocaciones"
+                    method="persistParticipacion" ref="_beanPersistGtimeParticipaciones"/>
+                <doCatch id="_doCatchParticipaciones">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorParticipaciones">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_PARTICIPACIONES}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorParticipaciones" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persisteFechas">
+            <from id="_fromPersisteFechas" uri="direct:Fechas"/>
+            <doTry id="_doTryFechas">
+                <bean id="_beansss2" method="persistFechas" ref="_beanPersistGtimeFechas"/>
+                <doCatch id="_doCatchFechas">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorFechas">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_FECHAS}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorFechas" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persisteLocaciones">
+            <from id="_fr3omss2" uri="direct:Locaciones"/>
+            <doTry id="_doTryLocaciones">
+                <bean id="_beassn2" method="persistLocacion" ref="_beanPersistGtimeLocaciones"/>
+                <doCatch id="_doCatchLocaciones">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorLocaciones">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_LOCACIONES}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorLocaciones" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persisteObservaciones">
+            <from id="_fromPersisteObservaciones" uri="direct:Observaciones"/>
+            <doTry id="_doTryObservaciones">
+                <bean id="_beansObservaciones"
+                    method="persistObservacion" ref="_beanPersistGtimeObservaciones"/>
+                <doCatch id="_doCatchObservaciones">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorObservaciones">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_OBSERVACIONES}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorObservaciones" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+        <route id="_persisteRelaciones">
+            <from id="_fromPersisteRelaciones" uri="direct:Relaciones"/>
+            <doTry id="_doTryRelaciones">
+                <bean id="_beansRelaciones" method="persistRelaciones" ref="_beanPersistGtimeRelaciones"/>
+                <doCatch id="_doCatchRelaciones">
+                    <exception>java.lang.Exception</exception>
+                    <handled>
+                        <constant>true</constant>
+                    </handled>
+                    <setHeader headerName="evento" id="_setHeaderErrorRelaciones">
+                        <simple>${type:cl.gob.sna.gtime.modelo.vo.DetalleLogEvento.ERROR_DB_REFERENCIAS}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaErrorRelaciones" uri="direct:trazabilidad"/>
+                </doCatch>
+            </doTry>
+        </route>
+    </routeContext>
+</beans>

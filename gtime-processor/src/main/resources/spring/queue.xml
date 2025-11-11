@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd                http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd      http://www.springframework.org/schema/jee      http://www.springframework.org/schema/jee/spring-jee-3.0.xsd     http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <routeContext id="actualizaQueueCtx" xmlns="http://camel.apache.org/schema/spring">
+        <route id="_routeActualizaQueue">
+            <from id="_fromActualizaQueue" uri="direct:actualizaQueue"/>
+            <process id="_processDequeuea" ref="_processDequeue"/>
+            <to id="_toJmsActualizaQueue" pattern="InOnly" uri="jms:queue:jmsCambioEstadoAdmMsgQueue?deliveryPersistent=false"/>
+        </route>
+    </routeContext>
+</beans>

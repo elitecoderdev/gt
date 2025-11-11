@@ -1,0 +1,23 @@
+# Script CLI de JBoss para configurar las colas JMS necesarias para GTIME Valida Ingreso
+# Uso: $JBOSS_HOME/bin/jboss-cli.sh --connect --file=configure-jms-queues.cli
+
+# Crear cola jmsGtimeDesencoladorQueue
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsGtimeDesencoladorQueue:add(entries=["java:/jms/queue/jmsGtimeDesencoladorQueue"])
+
+# Crear cola jmsGtimeProcesaValidacionesQueue
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsGtimeProcesaValidacionesQueue:add(entries=["java:/jms/queue/jmsGtimeProcesaValidacionesQueue"])
+
+# Crear cola jmsTrazaGtime
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsTrazaGtime:add(entries=["java:/jms/queue/jmsTrazaGtime"])
+
+# Crear cola jmsCambioEstadoAdmMsgQueue
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsCambioEstadoAdmMsgQueue:add(entries=["java:/jms/queue/jmsCambioEstadoAdmMsgQueue"])
+
+# Verificar que las colas se crearon correctamente
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsGtimeDesencoladorQueue:read-resource
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsGtimeProcesaValidacionesQueue:read-resource
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsTrazaGtime:read-resource
+/subsystem=messaging/hornetq-server=default/jms-queue=jmsCambioEstadoAdmMsgQueue:read-resource
+
+echo "Colas JMS configuradas exitosamente"
+

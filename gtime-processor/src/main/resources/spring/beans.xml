@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                                   http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                        http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd                http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <bean
+        class="cl.gob.sna.gtime.processor.aggregate.AggregationStrategyPersistencias" id="_valAggregationStrategy"/>
+    <bean class="cl.gob.sna.gtime.processor.process.ProcessDequeue" id="_processDequeue"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.process.ProcessTrazaProcessor" id="_ProcessTrazaProcessor"/>
+    <bean class="cl.gob.sna.gtime.processor.process.ProcessResult" id="_processResultadoValidaciones"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.process.ProcessPersistResult" id="_processResultadoPersistencia"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistRollbackBean" id="_beanRollback"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistGtimeBean" id="_beanPersistGtime"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocParticipacionesBean" id="_beanPersistGtimeParticipaciones"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistDocFechasBean" id="_beanPersistGtimeFechas"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocLocacionesBean" id="_beanPersistGtimeLocaciones"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocObservacionesBean" id="_beanPersistGtimeObservaciones"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocRelacionesBean" id="_beanPersistGtimeRelaciones"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistDocItemsBean" id="_beanPersistItems"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocTransporteBean" id="_beanPersistDocTransporte"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocTransGuiaCourierBean" id="_beanPersistDocTransGuiaCourier"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocDocumentosRepository" id="_repoDocDocumentos"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.AdmPersonasRepository" id="_repoAdmPersonas"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocFechaDocumentoRepository" id="_repoDocFecha"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocLocacionRepository" id="_repoDocLocacion"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocObservacionRepository" id="_repoDocObservacion"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocParticipacionRepository" id="_repoDocParticipacion"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocRelacionRepository" id="_repoDocRelacion"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocTranItemTransporteRepository" id="_repoDocTranItemTransporteRepository"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocTransporteRepository" id="_repoDocTransporteRepository"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocTransGuiaCourierRepository" id="_repoPersistDocTransGuiaCourier"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistDocCargosBean" id="_beanPersistCargosBean"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocCargosRepository" id="_repoPersistDocCargosRepository"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistDocEstadoBean" id="_beanPersistDocEstadoBean"/>
+
+    <bean class="cl.gob.sna.gtime.processor.repo.DocEstadoRepository" id="_repoDocEstadoRepository"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.PersistDocImagenBean" id="_beanPersistDocImagenBean"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocImagenRepository" id="_repoPersistDocImagenRepository"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocTransbordosBean" id="_beanPersistDocTransbordosBean"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocTransbordosRepository" id="_repoPersistDocTransbordosRepository"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.beans.PersistDocVistosBuenosBean" id="_beanPersistDocVistosBuenosBean"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.DocVistosBuenosRepository" id="_repoPersistDocVistosBuenosRepository"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.VerificacionRepository" id="_repoVerificacionRepository"/>
+    <bean
+        class="cl.gob.sna.gtime.processor.repo.VerificacionSobRepository" id="_repoVerificacionSobRepository"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.VerificacionBean" id="_repoVerificacionRepositoryBean"/>
+    <bean class="cl.gob.sna.gtime.processor.beans.VerificacionSobBean" id="_repoVerificacionSobRepositoryBean"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocTranItemProductoRepository" id="_docTranItemProductoRepository"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocNotificacionBatchRepository" id="_docNotificacionBatchRepository"/>
+    <bean class="cl.gob.sna.gtime.processor.repo.DocPropagacionBatchRepository" id="_docPropagacionBatchRepository"/>
+</beans>

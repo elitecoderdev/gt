@@ -1,0 +1,145 @@
+{
+  "Comment": "Step Function para orquestar validaciones de documentos GTIME",
+  "StartAt": "ValidarGenerales",
+  "States": {
+    "ValidarGenerales": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ValidacionGeneralFunctionArn}",
+        "Payload": {
+          "gtime.$": "$.gtime"
+        }
+      },
+      "ResultPath": "$.validacionesGenerales",
+      "Next": "ValidarNivel1"
+    },
+    "ValidarNivel1": {
+      "Type": "Map",
+      "ItemsPath": "$.validacionesNivel1",
+      "MaxConcurrency": 10,
+      "Iterator": {
+        "StartAt": "ValidarNivel1Task",
+        "States": {
+          "ValidarNivel1Task": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName.$": "$.functionArn",
+              "Payload": {
+                "gtime.$": "$.gtime"
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.validacionesNivel1",
+      "Next": "ValidarNivel2"
+    },
+    "ValidarNivel2": {
+      "Type": "Map",
+      "ItemsPath": "$.validacionesNivel2",
+      "MaxConcurrency": 10,
+      "Iterator": {
+        "StartAt": "ValidarNivel2Task",
+        "States": {
+          "ValidarNivel2Task": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName.$": "$.functionArn",
+              "Payload": {
+                "gtime.$": "$.gtime"
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.validacionesNivel2",
+      "Next": "ValidarNivel3"
+    },
+    "ValidarNivel3": {
+      "Type": "Map",
+      "ItemsPath": "$.validacionesNivel3",
+      "MaxConcurrency": 10,
+      "Iterator": {
+        "StartAt": "ValidarNivel3Task",
+        "States": {
+          "ValidarNivel3Task": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName.$": "$.functionArn",
+              "Payload": {
+                "gtime.$": "$.gtime"
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.validacionesNivel3",
+      "Next": "AgregarResultados"
+    },
+    "AgregarResultados": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${AgregadorValidacionesFunctionArn}",
+        "Payload": {
+          "validacionesGenerales.$": "$.validacionesGenerales",
+          "validacionesNivel1.$": "$.validacionesNivel1",
+          "validacionesNivel2.$": "$.validacionesNivel2",
+          "validacionesNivel3.$": "$.validacionesNivel3",
+          "gtime.$": "$.gtime"
+        }
+      },
+      "ResultPath": "$.documentoResponse",
+      "Next": "PublicarResultado"
+    },
+    "PublicarResultado": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage",
+      "Parameters": {
+        "QueueUrl": "${ValidationQueueUrl}",
+        "MessageBody.$": "$.documentoResponse"
+      },
+      "End": true
+    }
+  },
+  "Retry": [
+    {
+      "ErrorEquals": ["States.TaskFailed"],
+      "IntervalSeconds": 2,
+      "MaxAttempts": 3,
+      "BackoffRate": 2
+    },
+    {
+      "ErrorEquals": ["States.Timeout"],
+      "IntervalSeconds": 5,
+      "MaxAttempts": 2,
+      "BackoffRate": 2
+    }
+  ],
+  "Catch": [
+    {
+      "ErrorEquals": ["States.ALL"],
+      "Next": "ErrorHandler",
+      "ResultPath": "$.error"
+    }
+  ],
+  "States": {
+    "ErrorHandler": {
+      "Type": "Fail",
+      "Error": "ValidationFailed",
+      "Cause": "Error en el proceso de validación"
+    }
+  }
+}
+
+
+
+
+

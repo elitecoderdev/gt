@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd  http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                           http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <routeContext id="base-context" xmlns="http://camel.apache.org/schema/spring">
+        <route id="_SQL_cambio_estado_proc" streamCache="true">
+            <from id="_toCambioEstado" uri="direct:setCambioEstado"/>
+            <split id="_registros" streaming="true">
+                <simple>${header.RESULT_SET}</simple>
+                <choice id="_choice1">
+                    <when id="_Estado_E">
+                        <simple>${header.CAMBIO_ESTADO} == '2'</simple>
+                        <setBody id="_SQL_Estado_Procesando">
+                            <simple>{{query.proceso.selectividad.cambioestado.procesando}} ${body['ID']}</simple>
+                        </setBody>
+                    </when>
+                    <when id="_Estado_Pendiente">
+                        <simple>${header.CAMBIO_ESTADO} == '1'</simple>
+                        <setBody id="_SQL_Estado_Reproceso">
+                            <simple>{{query.proceso.selectividad.cambioestado.pendiente}} ${body['ID']}</simple>
+                        </setBody>
+                    </when>
+                </choice>
+                <to id="_toJdbcCambioEstado" uri="jdbc:dataSourcePostal"/>
+            </split>
+        </route>
+    </routeContext>
+</beans>

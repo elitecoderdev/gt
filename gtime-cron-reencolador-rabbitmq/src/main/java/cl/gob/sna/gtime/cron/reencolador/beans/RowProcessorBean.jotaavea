@@ -1,0 +1,31 @@
+package cl.gob.sna.gtime.cron.reencolador.beans;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
+
+import cl.gob.sna.pda.modelo.vo.ws075.NotificacionVO;
+
+ 
+public class RowProcessorBean implements Processor {
+	 
+	@SuppressWarnings("unchecked")
+    public void process(Exchange exchange) throws Exception {
+		List<Map<String, Object>> rows = exchange.getIn().getBody(List.class);
+        List<NotificacionVO> listNotificacionVO = new ArrayList<NotificacionVO>();
+        for (Map<String, Object> row : rows) {
+        	NotificacionVO notificacionVO = new NotificacionVO();
+        	notificacionVO.setId(((BigDecimal) row.get("ID")).longValue());	
+        	notificacionVO.setIdDetalleEnvio(((BigDecimal)row.get("ID_DETALLE_ENVIO_WS74")).longValue());
+        	notificacionVO.setIdEstadoProcesoNotificacion(((BigDecimal)row.get("ID_ESTADO_PROCES_NOTIFICACION")).longValue());
+        	notificacionVO.setReintentosInformeScx(((BigDecimal)row.get("REINTENTOS_INFORME_SICEX")).longValue());
+        	notificacionVO.setTransaccionId(((String) row.get("TRANSACCION_ID")));	
+        	listNotificacionVO.add(notificacionVO);        	
+        }
+        exchange.getOut().setBody(listNotificacionVO);
+    }
+}

@@ -1,0 +1,142 @@
+{
+  "Comment": "Step Function para orquestar persistencia paralela de documentos GTIME",
+  "StartAt": "PersistirDocumento",
+  "States": {
+    "PersistirDocumento": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${PersistDocFunctionArn}",
+        "Payload": {
+          "gtime.$": "$.gtime"
+        }
+      },
+      "ResultPath": "$.documento",
+      "Next": "PersistirRelaciones"
+    },
+    "PersistirRelaciones": {
+      "Type": "Map",
+      "ItemsPath": "$.persistencias",
+      "MaxConcurrency": 20,
+      "Iterator": {
+        "StartAt": "PersistirEntidad",
+        "States": {
+          "PersistirEntidad": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName.$": "$.functionArn",
+              "Payload": {
+                "idDocumento.$": "$.documento.idDocumento",
+                "gtime.$": "$.gtime"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": ["States.TaskFailed"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "Next": "ErrorPersistencia",
+                "ResultPath": "$.error"
+              }
+            ],
+            "End": true
+          },
+          "ErrorPersistencia": {
+            "Type": "Fail",
+            "Error": "PersistenceFailed",
+            "Cause": "Error al persistir entidad"
+          }
+        }
+      },
+      "ResultPath": "$.resultadosPersistencia",
+      "Next": "AgregarResultadosPersistencia"
+    },
+    "AgregarResultadosPersistencia": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${AgregadorPersistenciaFunctionArn}",
+        "Payload": {
+          "resultados.$": "$.resultadosPersistencia",
+          "documento.$": "$.documento"
+        }
+      },
+      "ResultPath": "$.resultadoFinal",
+      "Next": "EvaluarResultado"
+    },
+    "EvaluarResultado": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.resultadoFinal.exitoso",
+          "BooleanEquals": false,
+          "Next": "Rollback"
+        }
+      ],
+      "Default": "ActualizarEstado"
+    },
+    "Rollback": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${RollbackFunctionArn}",
+        "Payload": {
+          "gtime.$": "$.gtime",
+          "documento.$": "$.documento"
+        }
+      },
+      "Next": "ErrorFinal"
+    },
+    "ActualizarEstado": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${UpdateEstadoFunctionArn}",
+        "Payload": {
+          "idDocumento.$": "$.documento.idDocumento",
+          "estado": "PROCESADO"
+        }
+      },
+      "End": true
+    },
+    "ErrorFinal": {
+      "Type": "Fail",
+      "Error": "ProcessingFailed",
+      "Cause": "Error en el proceso de persistencia"
+    }
+  },
+  "Retry": [
+    {
+      "ErrorEquals": ["States.TaskFailed"],
+      "IntervalSeconds": 2,
+      "MaxAttempts": 2,
+      "BackoffRate": 2
+    }
+  ],
+  "Catch": [
+    {
+      "ErrorEquals": ["States.ALL"],
+      "Next": "ErrorHandler",
+      "ResultPath": "$.error"
+    }
+  ],
+  "States": {
+    "ErrorHandler": {
+      "Type": "Fail",
+      "Error": "ProcessingFailed",
+      "Cause": "Error en el proceso de persistencia"
+    }
+  }
+}
+
+
+
+
+

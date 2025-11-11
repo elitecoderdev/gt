@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:http="http://cxf.apache.org/transports/http/configuration"
+    xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:sec="http://cxf.apache.org/configuration/security"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans            http://www.springframework.org/schema/beans/spring-beans.xsd             http://camel.apache.org/schema/spring            http://camel.apache.org/schema/spring/camel-spring.xsd           http://www.springframework.org/schema/util            http://www.springframework.org/schema/util/spring-util-4.2.xsd http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd                http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <jee:jndi-lookup id="dataSourcePostal" jndi-name="java:jboss/datasources/POraPOSTAL_BOIQUE"/>
+    <import resource="beans.xml"/>
+    <import resource="cron-notificacion-087-camel-context.xml"/>
+    <import resource="base-camel-context.xml"/>
+    <camelContext id="pda-cmp-cron-notif-087_camelContext"
+        shutdownRoute="Defer" streamCache="true" xmlns="http://camel.apache.org/schema/spring">
+        <propertyPlaceholder id="configProp" location="file:${configuration-pda}/pda-cron-config.properties,classpath:/META-INF/properties/props.properties"/>
+        <routeContextRef ref="base-context"/>
+        <routeContextRef ref="cron-notificacion-087"/>
+    </camelContext>
+</beans>

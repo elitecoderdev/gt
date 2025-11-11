@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd  http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                           http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <import resource="beans.xml"/>
+    <import resource="validaciones-genericas-route-context.xml"/>
+    <camelContext allowUseOriginalMessage="false"
+        id="gtime-valida-ingreso-camel-context" xmlns="http://camel.apache.org/schema/spring">
+        <routeContextRef ref="gtime-validaciones-genericas"/>
+        <route id="recepcion-gtime">
+            <from id="_fromJmsProcesaDsencolado" uri="jms:queue:jmsGtimeDesencoladorQueue?jmsMessageType=Object"/>
+            <unmarshal id="_unmarshal1">
+                <json library="Jackson" unmarshalTypeName="cl.gob.sna.gtime.api.vo.Gtime"/>
+            </unmarshal>
+            <setHeader headerName="documento" id="_setHeaderDocumento">
+                <simple>${body}</simple>
+            </setHeader>
+            <process id="_ini-validacio-payload" ref="_ini-validacion-payload"/>
+            <log id="_headerValidacion" message="[gtime-valida-ingreso] -> ${header.msgLog}"/>
+            <process id="_ini-validaciones" ref="_ini-validacion"/>
+            <to id="_toValGeneral" uri="direct:validacion-general"/>
+            <multicast id="_multicastValidaciones"
+                parallelProcessing="true" strategyRef="_valAggregationStrategy">
+                <to id="_toValFechas" uri="direct:validarFechas"/>
+                <to id="_toValParticipantes" uri="direct:validarParticiones"/>
+                <to id="_toValItems" uri="direct:validarItems"/>
+                <to id="_toValCargos" uri="direct:validarCargos"/>
+                <to id="_toValObservaciones" uri="direct:validarObservaciones"/>
+                <to id="_toValVistosBuenos" uri="direct:validarVistosBuenos"/>
+            </multicast>
+            <multicast id="_multicastValidacionesSegundoNivel"
+                parallelProcessing="true" strategyRef="_valAggregationStrategy">
+                <to id="_toValEmisor" uri="direct:validarEmisor"/>
+                <to id="_toValReferencias" uri="direct:validarReferencias"/>
+            </multicast>
+            <multicast id="_multicastValidacionesTercerNivel"
+                parallelProcessing="true" strategyRef="_valAggregationStrategy">
+                <to id="_toValTransbordos" uri="direct:validarTransbordos"/>
+                <to id="_toValLocaciones" uri="direct:validarLocaciones"/>
+                <to id="_toValRut" uri="direct:validarRut"/>
+            </multicast>
+            <process id="_construirResponse" ref="_processResponse"/>
+            <marshal id="_marshal1">
+                <json allowJmsType="true"
+                    enableJaxbAnnotationModule="true" library="Jackson"/>
+            </marshal>
+            <removeHeaders id="_removeHeaders1" pattern="*"/>
+            <setHeader headerName="Content-Type" id="h_content_type_n1">
+                <constant>application/json</constant>
+            </setHeader>
+            <to id="_toProcessValidationResponse" uri="jms:queue:jmsGtimeProcesaValidacionesQueue?jmsMessageType=Object"/>
+        </route>
+       <!-- <route id="_routeTrazabilidad" streamCache="true">
+            <from id="_fromTrazabilidad" uri="direct:trazabilidad"/>
+            <process id="_traza_process" ref="_ProcessTraza"/>
+            <to id="_to1" uri="jms:queue:jmsTrazaGtime?jmsMessageType=Object"/>
+        </route>-->
+        <route id="_routeValGeneral">
+            <from id="_fromValGeneral" uri="direct:validacion-general"/>
+            <to id="_toValLoginDigitador" uri="direct:valida-login-digitador"/>
+            <to id="_toValNumeroReferencia" uri="direct:valida-numero-referencia"/>
+            <to id="_toValTotalBultos" uri="direct:valida-total-bultos"/>
+            <to id="_toValTotalPeso" uri="direct:valida-total-peso"/>
+            <to id="_toValUnidadPeso" uri="direct:valida-unidad-peso"/>
+            <to id="_toValTotalVolumen" uri="direct:valida-total-volumen"/>
+            <to id="_toValUnidadVolumen" uri="direct:valida-unidad-volumen"/>
+            <to id="_toValTotalItem" uri="direct:valida-total-item"/>
+            <to id="_toValValorDeclarado" uri="direct:valida-valor-declarado"/>
+            <to id="_toValMonedaValor" uri="direct:valida-moneda-valor"/>
+            <to id="_toValParcial" uri="direct:valida-parcial"/>
+            <to id="_toValTipoOperacion" uri="direct:valida-tipo-operacion"/>
+            <to id="_toValRutConsignatario" uri="direct:valida-rut-consignatario"/>
+        </route>
+        <route id="_routeValFechas">
+            <from id="_fromValFechas" uri="direct:validarFechas"/>
+            <bean id="_validarFechas" ref="_valFechas"/>
+        </route>
+        <route id="_routeValParticipantes">
+            <from id="_fromValParticipaciones" uri="direct:validarParticiones"/>
+            <bean id="_validarParticiones" ref="_valParticipaciones"/>
+        </route>
+        <route id="_routeValReferencias">
+            <from id="_fromValReferencias" uri="direct:validarReferencias"/>
+            <bean id="_validarReferencias" ref="_valReferencias"/>
+        </route>
+        <route id="_routeValItems">
+            <from id="_fromValItems" uri="direct:validarItems"/>
+            <process id="_validarItems" ref="_valItems"/>
+        </route>
+        <route id="_routeValCargos">
+            <from id="_fromValCargos" uri="direct:validarCargos"/>
+            <process id="_validarCargos" ref="_valCargos"/>
+        </route>
+        <route id="_routeValObservaciones">
+            <from id="_fromValObservaciones" uri="direct:validarObservaciones"/>
+            <process id="_validarObservaciones" ref="_valObservaciones"/>
+        </route>
+        <route id="_routeValVistosBuenos">
+            <from id="_fromValVistosBuenos" uri="direct:validarVistosBuenos"/>
+            <process id="_validarVistosBuenos" ref="_valVistosBuenos"/>
+        </route>
+        <route id="_routeValEmisor">
+            <from id="_fromValEmisor" uri="direct:validarEmisor"/>
+            <bean id="_validarEmisor" ref="_valEmisor"/>
+        </route>
+        <route id="_routeValLocaciones">
+            <from id="_fromValLocaciones" uri="direct:validarLocaciones"/>
+            <bean id="_validarLocaciones" ref="_valLocaciones"/>
+        </route>
+        <route id="_routeValTransbordos">
+            <from id="_fromValTransbordos" uri="direct:validarTransbordos"/>
+            <process id="_validarTransbordos" ref="_valTransbordos"/>
+        </route>
+        <route id="_routeValRut">
+            <from id="_fromValRut" uri="direct:validarRut"/>
+            <process id="_validarRut" ref="_valRut"/>
+        </route>
+    </camelContext>
+</beans>

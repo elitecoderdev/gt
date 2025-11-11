@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd                http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd      http://www.springframework.org/schema/jee      http://www.springframework.org/schema/jee/spring-jee-3.0.xsd     http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <routeContext id="gtime-validaciones-genericas" xmlns="http://camel.apache.org/schema/spring">
+
+  <route id="_route-validacion-login-digitador">
+    <from uri="direct:valida-login-digitador" id="_from-valida-login-digitador"/>
+    <process ref="_login-digitador" id="_val-login-digitador_process"/>
+  </route>
+
+  <route id="_route-validacion-numero-referencia">
+    <from uri="direct:valida-numero-referencia" id="_from-valida-numero-referencia"/>
+    <process ref="_numero-referencia" id="_val-numero-referencia-process"/>
+  </route>
+
+  <route id="_route-validacion-total-bultos">
+    <from uri="direct:valida-total-bultos" id="_from-valida-total-bultos"/>
+   <process ref="_total-bultos" id="_val-_total-bultos-process"/>
+ </route>
+
+ <route id="_route-validacion-total-peso">
+   <from uri="direct:valida-total-peso" id="_from-valida-total-peso"/>
+  <process ref="_total-peso" id="_val-_total-peso-process"/>
+</route>
+
+<route id="_route-validacion-unidad-peso">
+  <from uri="direct:valida-unidad-peso" id="_from-valida-unidad-peso"/>
+ <bean id="_val-_unidad-peso-beans" ref="_unidad-peso"/>
+</route>
+
+<route id="_route-validacion-total-volumen">
+ <from uri="direct:valida-total-volumen" id="_from-valida-total-volumen"/>
+ <process ref="_total-volumen" id="_val-_total-volumen-process"/>
+</route>
+
+<route id="_route-validacion-unidad-volumen">
+ <from uri="direct:valida-unidad-volumen" id="_from-valida-unidad-volumen"/>
+ <bean id="_val-unidad-volumen-beans" ref="_unidad-volumen"/>
+</route>
+
+<route id="_route-validacion-total-item">
+ <from uri="direct:valida-total-item" id="_from-valida-total-item"/>
+ <process ref="_total-item" id="_val-_total-item-process"/>
+</route>
+
+<route id="_route-validacion-valor-declarado">
+ <from uri="direct:valida-valor-declarado" id="_from-valida-valor-declarado"/>
+
+ <process ref="_valor-declarado" id="_val-_valor-declarado-process"/>
+</route>
+
+<route id="_route-validacion-moneda-valor">
+ <from uri="direct:valida-moneda-valor" id="_from-valida-moneda-valor"/>
+ <bean id="_moneda-valor-beans" ref="_moneda-valor"/>
+</route>
+
+<route id="_route-validacion-parcial">
+ <from uri="direct:valida-parcial" id="_from-valida-parcial"/>
+ <process ref="_parcial" id="_val-_parcial-process"/>
+</route>
+
+<route id="_route-validacion-tipo-operacion">
+ <from uri="direct:valida-tipo-operacion" id="_from-valida-tipo-operacion"/>
+ <process ref="_tipo-operacion" id="_val-_tipo-operacion-process"/>
+</route>
+
+<route id="_route-validacion-rut-consignatario">
+    <from uri="direct:valida-rut-consignatario" id="_from-valida-rut-consignatario"/>
+    <process ref="_valRutConsignatario" id="_val-_rut-consignatario-process"/>
+</route>
+
+</routeContext>
+</beans>

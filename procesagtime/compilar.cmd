@@ -1,0 +1,2 @@
+#C:\aduana-desa\app-servers\bea-weblogic-8.1\jdk142_05\bin\javac -classpath "classes;lib/ojdbc14.jar" -d classes src/*.java
+C:\aduana-desa\jdks\jdk1.7.0_101\bin\javac -classpath "classes;lib/ojdbc14.jar" -d classes -Xlint:deprecation src/*.java

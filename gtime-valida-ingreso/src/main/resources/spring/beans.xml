@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                                   http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                        http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd                http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+    <bean class="org.slf4j.LoggerFactory" factory-method="getLogger" id="gtime_logger">
+        <constructor-arg value="cl.gob.sna.gtime.validaciones"/>
+    </bean>
+    <!--  Genericas -->
+    <!--  Process -->
+    <bean
+            class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionPayload" id="_ini-validacion-payload"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessInicioValidacion" id="_ini-validacion"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionLoginDigitador" id="_login-digitador"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionNumeroReferencia" id="_numero-referencia"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionParcial" id="_parcial"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionTipoOperacion" id="_tipo-operacion"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionTotalBultos" id="_total-bultos"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionTotalItem" id="_total-item"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionTotalPeso" id="_total-peso"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionTotalVolumen" id="_total-volumen"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.process.ProcessValidacionValorDeclarado" id="_valor-declarado"/>
+    <!-- /Process -->
+    <!--  Beans -->
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.beans.ValidacionMonedaValorBeans" id="_moneda-valor"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.beans.ValidacionUnidadPesoBeans" id="_unidad-peso"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.beans.ValidacionUnidadVolumenBeans" id="_unidad-volumen"/>
+    <!-- /Beans -->
+    <!--  Services -->
+    <!--<bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionFechasServiceImpl" id="_validacion-fecha-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionPaisServiceImpl" id="_validacion-doc-rol-tipo-doc-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionDocRolTipoDocServiceImpl" id="_validacion-pais-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionOperadorServiceImpl" id="_validacion-operador-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionEmisorServiceImpl" id="_validacion-emisor-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionReferenciaServiceImpl" id="_validacion-referencia-service"/>
+    <bean
+         class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionLocacionesServiceImpl" id="_validacion-locaciones-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionObservacionServiceImpl" id="_validacion-observacion-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionItemsServiceImpl" id="_validacion-items-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionProductoServiceImpl" id="_validacion-producto-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionTransbordoServiceImpl" id="_validacion-transbordo-service"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.genericas.service.ValidacionConsignatarioServiceImpl" id="_validacion-consignatario-service"/>
+-->
+    <!-- /Services -->
+    <!-- /Genericas -->
+    <!--  Repository -->
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.MonedaValorRepository" id="_moneda-valor-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.UnidadMedidaRepository" id="_unidad-medida-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocTipoDocFechaRepository" id="_doc-tipo-doc-fecha-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.PaisRepository" id="_pais-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocRolTipoDocRepository" id="_doc-rol-tipo-doc-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.OperadorRepository" id="_operador-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.PerPersonaRepository" id="_per-persona-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocDocumentosBaseRepository" id="doc-documento-base-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocTipoDocumentoRepository" id="doc-tipo-documento-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocRelacionPermitidaRepository" id="doc-relacion-permitida-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocTipoDocLocacionRepository" id="doc-tipo-doc-locacion-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.LocacionRepository" id="locacion-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocTipoObservacionRepository" id="tipo-observacion-repo"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.repository.DocTranTipoBultoRepository" id="doc-tran-tipo-bulto-repo"/>
+    <!--<bean
+        class="cl.gob.sna.gtime.validaciones.repository.DINRepository" id="din-repo"/>-->
+
+    <!-- /Repository -->
+    <!--  Ingreso-->
+    <!-- Process -->
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.process.ProcessTraza" id="_ProcessTraza"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.process.ProcessValidarCargos" id="_valCargos"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.process.ProcessValidarVistosBuenos"
+        id="_valVistosBuenos" scope="singleton"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.process.ProcessValidarRut" id="_valRut"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.process.ProcessResponse" id="_processResponse"/>
+    <!-- /Process -->
+    <!--  Beans-->
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionFechasBeans" id="_valFechas"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionParticipacionesBeans" id="_valParticipaciones"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionEmisorBeans" id="_valEmisor"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionReferenciasBeans" id="_valReferencias"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionLocacionesBeans" id="_valLocaciones"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionObservacionesBeans" id="_valObservaciones"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionItemsBeans" id="_valItems"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionTransbordosBeans" id="_valTransbordos"/>
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.beans.ValidacionRutConsignatarioBeans" id="_valRutConsignatario"/>
+
+    <!-- /Beans-->
+    <!-- /Ingreso-->
+    <bean
+        class="cl.gob.sna.gtime.validaciones.ingreso.aggregate.AggregationStrategyValidaciones" id="_valAggregationStrategy"/>
+</beans>

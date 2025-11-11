@@ -1,0 +1,2 @@
+#C:\aduana-desa\jdks\j2re1.4.2_09\bin\java -cp "classes;lib/ojdbc14.jar;" -Duser.timezone="America/Santiago" ProcesaGTIME
+C:\aduana-desa\jdks\jdk1.7.0_101\bin\java -cp "classes;lib/ojdbc14.jar;" -Duser.timezone=America/Santiago ProcesaGTIME

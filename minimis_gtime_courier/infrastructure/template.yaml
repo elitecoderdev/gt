@@ -1,0 +1,603 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: GTIME Courier - Aplicación Serverless AWS con TypeScript
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+  
+  DatabaseHost:
+    Type: String
+    Description: RDS Oracle hostname
+  
+  DatabasePort:
+    Type: Number
+    Default: 1521
+    Description: RDS Oracle port
+  
+  DatabaseName:
+    Type: String
+    Description: Database name
+  
+  DatabaseSecretArn:
+    Type: String
+    Description: ARN del secreto en Secrets Manager con credenciales de DB
+  
+  EventBusName:
+    Type: String
+    Default: gtime-courier-bus
+    Description: Nombre del EventBridge custom bus
+
+Resources:
+  # ECR Repository
+  LambdaContainerRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: gtime-courier-lambda
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  # EventBridge Custom Bus
+  EventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Ref EventBusName
+
+  # SQS Queue para documentos validados
+  ValidationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: gtime-courier-validation-queue
+      VisibilityTimeout: 300
+      MessageRetentionPeriod: 345600
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt ValidationDLQ.Arn
+        maxReceiveCount: 3
+
+  ValidationDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: gtime-courier-validation-dlq
+      MessageRetentionPeriod: 1209600
+
+  # Lambda Function - Orchestrator
+  OrchestratorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: gtime-courier-orchestrator
+      PackageType: Image
+      ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gtime-courier-lambda:latest'
+      ImageConfig:
+        Command:
+          - dist.handlers.orchestrator.handler
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          DB_HOST: !Ref DatabaseHost
+          DB_PORT: !Ref DatabasePort
+          DB_NAME: !Ref DatabaseName
+          DB_SECRET_ARN: !Ref DatabaseSecretArn
+          EVENT_BUS_NAME: !Ref EventBusName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref DatabaseSecretArn
+            - Effect: Allow
+              Action:
+                - events:PutEvents
+              Resource: !GetAtt EventBus.Arn
+      Events:
+        ApiGatewayEvent:
+          Type: Api
+          Properties:
+            Path: /documentos
+            Method: post
+            RestApiId: !Ref ApiGateway
+
+  # Lambda Function - Validator
+  ValidatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: gtime-courier-validator
+      PackageType: Image
+      ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gtime-courier-lambda:latest'
+      ImageConfig:
+        Command:
+          - dist.handlers.validator.handler
+      Timeout: 60
+      MemorySize: 512
+      Environment:
+        Variables:
+          DB_HOST: !Ref DatabaseHost
+          DB_PORT: !Ref DatabasePort
+          DB_NAME: !Ref DatabaseName
+          DB_SECRET_ARN: !Ref DatabaseSecretArn
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref DatabaseSecretArn
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt ValidationQueue.Arn
+      # Removido: Ahora se invoca desde Step Function
+      # Events:
+      #   ValidationEvent:
+      #     Type: EventBridgeRule
+      #     Properties:
+      #       EventBusName: !Ref EventBusName
+      #       Pattern:
+      #         source:
+      #           - gtime.courier
+      #         detail-type:
+      #           - documento.recibido
+
+  # Lambda Function - Processor
+  ProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: gtime-courier-processor
+      PackageType: Image
+      ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gtime-courier-lambda:latest'
+      ImageConfig:
+        Command:
+          - dist.handlers.processor.handler
+      Timeout: 300
+      MemorySize: 1024
+      Environment:
+        Variables:
+          DB_HOST: !Ref DatabaseHost
+          DB_PORT: !Ref DatabasePort
+          DB_NAME: !Ref DatabaseName
+          DB_SECRET_ARN: !Ref DatabaseSecretArn
+          EVENT_BUS_NAME: !Ref EventBusName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref DatabaseSecretArn
+            - Effect: Allow
+              Action:
+                - events:PutEvents
+              Resource: !GetAtt EventBus.Arn
+            - Effect: Allow
+              Action:
+                - rds-db:connect
+              Resource: !Sub 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:*/*'
+      # Removido: Ahora se invoca desde Step Function de Persistencia
+      # Events:
+      #   SQSEvent:
+      #     Type: SQS
+      #     Properties:
+      #       Queue: !GetAtt ValidationQueue.Arn
+      #       BatchSize: 10
+
+  # Lambda Function - Tracer
+  TracerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: gtime-courier-tracer
+      PackageType: Image
+      ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gtime-courier-lambda:latest'
+      ImageConfig:
+        Command:
+          - dist.handlers.tracer.handler
+      Timeout: 30
+      MemorySize: 256
+      Events:
+        TraceEvent:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref EventBusName
+            Pattern:
+              source:
+                - gtime.courier
+
+  # Step Function - Validación
+  ValidationStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: gtime-courier-validation-sm
+      RoleArn: !GetAtt StepFunctionsRole.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "Step Function para orquestar validaciones de documentos GTIME",
+          "StartAt": "ValidarGenerales",
+          "States": {
+            "ValidarGenerales": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ValidatorFunctionArn}",
+                "Payload": {
+                  "gtime.$": "$.gtime",
+                  "validationType": "generales"
+                }
+              },
+              "ResultPath": "$.validacionesGenerales",
+              "Next": "ValidarNivel1"
+            },
+            "ValidarNivel1": {
+              "Type": "Map",
+              "ItemsPath": "$.validacionesNivel1",
+              "MaxConcurrency": 10,
+              "Iterator": {
+                "StartAt": "ValidarNivel1Task",
+                "States": {
+                  "ValidarNivel1Task": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Parameters": {
+                      "FunctionName": "${ValidatorFunctionArn}",
+                      "Payload": {
+                        "gtime.$": "$.gtime",
+                        "validationType": "nivel1",
+                        "validationItem.$": "$"
+                      }
+                    },
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.validacionesNivel1",
+              "Next": "ValidarNivel2"
+            },
+            "ValidarNivel2": {
+              "Type": "Map",
+              "ItemsPath": "$.validacionesNivel2",
+              "MaxConcurrency": 10,
+              "Iterator": {
+                "StartAt": "ValidarNivel2Task",
+                "States": {
+                  "ValidarNivel2Task": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Parameters": {
+                      "FunctionName": "${ValidatorFunctionArn}",
+                      "Payload": {
+                        "gtime.$": "$.gtime",
+                        "validationType": "nivel2",
+                        "validationItem.$": "$"
+                      }
+                    },
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.validacionesNivel2",
+              "Next": "ValidarNivel3"
+            },
+            "ValidarNivel3": {
+              "Type": "Map",
+              "ItemsPath": "$.validacionesNivel3",
+              "MaxConcurrency": 10,
+              "Iterator": {
+                "StartAt": "ValidarNivel3Task",
+                "States": {
+                  "ValidarNivel3Task": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Parameters": {
+                      "FunctionName": "${ValidatorFunctionArn}",
+                      "Payload": {
+                        "gtime.$": "$.gtime",
+                        "validationType": "nivel3",
+                        "validationItem.$": "$"
+                      }
+                    },
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.validacionesNivel3",
+              "Next": "AgregarResultados"
+            },
+            "AgregarResultados": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ValidatorFunctionArn}",
+                "Payload": {
+                  "validacionesGenerales.$": "$.validacionesGenerales",
+                  "validacionesNivel1.$": "$.validacionesNivel1",
+                  "validacionesNivel2.$": "$.validacionesNivel2",
+                  "validacionesNivel3.$": "$.validacionesNivel3",
+                  "gtime.$": "$.gtime",
+                  "aggregate": true
+                }
+              },
+              "ResultPath": "$.documentoResponse",
+              "Next": "PublicarResultado"
+            },
+            "PublicarResultado": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sqs:sendMessage",
+              "Parameters": {
+                "QueueUrl": "${ValidationQueueUrl}",
+                "MessageBody.$": "$.documentoResponse"
+              },
+              "End": true
+            }
+          },
+          "Retry": [
+            {
+              "ErrorEquals": ["States.TaskFailed"],
+              "IntervalSeconds": 2,
+              "MaxAttempts": 3,
+              "BackoffRate": 2
+            }
+          ]
+        }
+      DefinitionSubstitutions:
+        ValidatorFunctionArn: !GetAtt ValidatorFunction.Arn
+        ValidationQueueUrl: !Ref ValidationQueue
+
+  # Step Function - Persistencia
+  PersistenceStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: gtime-courier-persistence-sm
+      RoleArn: !GetAtt StepFunctionsRole.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "Step Function para orquestar persistencia paralela de documentos GTIME",
+          "StartAt": "PersistirDocumento",
+          "States": {
+            "PersistirDocumento": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ProcessorFunctionArn}",
+                "Payload": {
+                  "gtime.$": "$.gtime",
+                  "action": "persistDocument"
+                }
+              },
+              "ResultPath": "$.documento",
+              "Next": "PersistirRelaciones"
+            },
+            "PersistirRelaciones": {
+              "Type": "Map",
+              "ItemsPath": "$.persistencias",
+              "MaxConcurrency": 20,
+              "Iterator": {
+                "StartAt": "PersistirEntidad",
+                "States": {
+                  "PersistirEntidad": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Parameters": {
+                      "FunctionName": "${ProcessorFunctionArn}",
+                      "Payload": {
+                        "idDocumento.$": "$.documento.idDocumento",
+                        "gtime.$": "$.gtime",
+                        "entityType.$": "$.entityType"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": ["States.TaskFailed"],
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.resultadosPersistencia",
+              "Next": "AgregarResultadosPersistencia"
+            },
+            "AgregarResultadosPersistencia": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ProcessorFunctionArn}",
+                "Payload": {
+                  "resultados.$": "$.resultadosPersistencia",
+                  "documento.$": "$.documento",
+                  "action": "aggregate"
+                }
+              },
+              "ResultPath": "$.resultadoFinal",
+              "Next": "EvaluarResultado"
+            },
+            "EvaluarResultado": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.resultadoFinal.exitoso",
+                  "BooleanEquals": false,
+                  "Next": "Rollback"
+                }
+              ],
+              "Default": "ActualizarEstado"
+            },
+            "Rollback": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ProcessorFunctionArn}",
+                "Payload": {
+                  "gtime.$": "$.gtime",
+                  "documento.$": "$.documento",
+                  "action": "rollback"
+                }
+              },
+              "Next": "ErrorFinal"
+            },
+            "ActualizarEstado": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ProcessorFunctionArn}",
+                "Payload": {
+                  "idDocumento.$": "$.documento.idDocumento",
+                  "estado": "PROCESADO",
+                  "action": "updateEstado"
+                }
+              },
+              "End": true
+            },
+            "ErrorFinal": {
+              "Type": "Fail",
+              "Error": "ProcessingFailed",
+              "Cause": "Error en el proceso de persistencia"
+            }
+          },
+          "Retry": [
+            {
+              "ErrorEquals": ["States.TaskFailed"],
+              "IntervalSeconds": 2,
+              "MaxAttempts": 2,
+              "BackoffRate": 2
+            }
+          ]
+        }
+      DefinitionSubstitutions:
+        ProcessorFunctionArn: !GetAtt ProcessorFunction.Arn
+
+  # IAM Role para Step Functions
+  StepFunctionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: gtime-courier-stepfunctions-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionsExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt ValidatorFunction.Arn
+                  - !GetAtt ProcessorFunction.Arn
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt ValidationQueue.Arn
+              - Effect: Allow
+                Action:
+                  - events:PutTargets
+                  - events:PutRule
+                  - events:DescribeRule
+                Resource: '*'
+
+  # EventBridge Rule para trigger Step Function de Validación
+  ValidationStepFunctionRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - gtime.courier
+        detail-type:
+          - documento.recibido
+      Targets:
+        - Arn: !GetAtt ValidationStateMachine.Arn
+          RoleArn: !GetAtt StepFunctionsRole.Arn
+          Id: ValidationStepFunctionTarget
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      Auth:
+        ApiKeyRequired: true
+
+  # API Key
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: gtime-courier-api-key
+      Enabled: true
+
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: gtime-courier-usage-plan
+      ApiStages:
+        - ApiId: !Ref ApiGateway
+          Stage: !Ref Environment
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 50
+
+  UsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway Endpoint URL
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+  
+  ApiKey:
+    Description: API Key for API Gateway
+    Value: !Ref ApiKey
+  
+  ECRRepository:
+    Description: ECR Repository URI
+    Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gtime-courier-lambda'
+  
+  EventBusName:
+    Description: EventBridge Bus Name
+    Value: !Ref EventBusName
+  
+  ValidationStateMachineArn:
+    Description: Step Function ARN for Validation
+    Value: !GetAtt ValidationStateMachine.Arn
+  
+  PersistenceStateMachineArn:
+    Description: Step Function ARN for Persistence
+    Value: !GetAtt PersistenceStateMachine.Arn
+

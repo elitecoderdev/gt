@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd                http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd      http://www.springframework.org/schema/jee      http://www.springframework.org/schema/jee/spring-jee-3.0.xsd     http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <import resource="beans.xml"/>
+    <import resource="persistencias.xml"/>
+    <import resource="rollback.xml"/>
+    <import resource="queue.xml"/>
+    <import resource="traza.xml"/>
+    <camelContext allowUseOriginalMessage="false"
+        id="procesador-gtime-camel-context-inicio" shutdownRoute="Defer" xmlns="http://camel.apache.org/schema/spring">
+        <routeContextRef ref="persistenciasCtx"/>
+        <routeContextRef ref="actualizaQueueCtx"/>
+        <routeContextRef ref="rollbackPersistenciasCtx"/>
+        <routeContextRef ref="trazabilidadCtx"/>
+        <route id="_routeDesencoladoProcessorValidaciones">
+            <from id="_fromJmsProcesaValidaciones" uri="jms:queue:jmsGtimeProcesaValidacionesQueue?jmsMessageType=Object"/>
+            <unmarshal id="_unmarshal1">
+                <json library="Jackson" prettyPrint="true" unmarshalTypeName="cl.gob.sna.gtime.vo.DocumentoResponse"/>
+            </unmarshal>
+            <removeHeaders id="_removeHeadersJms" pattern="*"/>
+            <setHeader headerName="documento" id="_setHeaderDocumento">
+                <simple>${body}</simple>
+            </setHeader>
+            <process id="_processResultadoValidaciones3" ref="_processResultadoValidaciones"/>
+            <log id="_logHeader" message="[gtime-processor] -> ${header.msgLog}" />
+            <choice id="_choice1">
+                <!-- GTIME ACEPTADA -->
+                <when id="_whenEvaluaResultado">
+                    <simple>${header.isAceptado} == true</simple>
+                    <!--<log id="_logGtImeACEPTADA" message="GTIME ACEPTADA"/>-->
+                    <!--CASO PARTICULAR VALIDACIONES CON WARNING-->
+                    <loop>
+                        <simple>${header.listaValidacionesFallidas.size}</simple>
+                        <setHeader headerName="evento" id="_setHeaderMSGValidacionWarn">
+                            <simple>${header.listaValidacionesFallidas.get(property.CamelLoopIndex).texto}</simple>
+                        </setHeader>
+                        <wireTap id="_wireTapTrazaWarnValidacion" uri="direct:trazabilidad"/>
+                    </loop>
+                    <!--CASO VALIDACIONES CON WARNING-->
+                    <to id="_to2" uri="direct:aceptaGtime"/>
+                </when>
+                <!-- GTIME ACEPTADA -->
+                <!-- GTIME RECHAZADA -->
+                <otherwise id="_otherwise1">
+                    <!--<log id="_logGtImeRECHAZADA" message="GTIME RECHAZADA"/>-->
+                    <setHeader headerName="evento" id="_setHeaderMsgTiempo1">
+                        <simple>${header.execTime}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaExecTime" uri="direct:trazabilidad"/>
+                    <!-- VALIDACIONES NO CUMPLIDAS -->
+                    <loop>
+                        <simple>${header.listaValidacionesFallidas.size}</simple>
+                        <setHeader headerName="evento" id="_setHeaderMSGValidacion1">
+                            <simple>${header.listaValidacionesFallidas.get(property.CamelLoopIndex).texto}</simple>
+                        </setHeader>
+                        <wireTap id="_wireTapTrazaErrorValidacion" uri="direct:trazabilidad"/>
+                    </loop>
+                    <!-- VALIDACIONES NO CUMPLIDAS -->
+                    <!-- CAMBIAR ESTADO QUEUE -->
+                    <wireTap id="_wireTapInsertAdmMensajesQueue" uri="direct:actualizaQueue">
+                        <body>
+                            <simple>${body}</simple>
+                        </body>
+                    </wireTap>
+                    <!-- CAMBIAR ESTADO QUEUE -->
+                </otherwise>
+            </choice>
+        </route>
+        <!-- GTIME ACEPTADA -->
+        <route id="_routeAceptaGtime">
+            <from id="_fromAceptaGtime" uri="direct:aceptaGtime"/>
+            <doTry id="_doTryPersistencia">
+                <bean id="_beanPersistBase" method="persistGtimeHeader" ref="_beanPersistGtime"/>
+                <choice id="_choiceGtimeExiste">
+                    <when id="_whenGtimeExiste">
+                        <simple>${header.existeGtime} == true</simple>
+                        <log id="_logGtImeExiste" message="GTIME EXISTE"/>
+                    </when>
+                    <otherwise id="_otherwiseGtimeNoExiste">
+                        <multicast id="_multicasPersistencia1"
+                                   parallelProcessing="false" strategyRef="_valAggregationStrategy">
+                            <to id="_toDocParticipaciones" uri="direct:participaciones"/>
+                            <to id="_toDocFechas" uri="direct:Fechas"/>
+                            <to id="_toDocRelaciones" uri="direct:Relaciones"/>
+                            <to id="_toDocLocaciones" uri="direct:Locaciones"/>
+                            <to id="_toDocObservaciones" uri="direct:Observaciones"/>
+                            <to id="_toDocTransporte" uri="direct:docTransporte"/>
+                            <to id="_toDocTransGuiaCourier" uri="direct:docTransGuiaCourier"/>
+                            <to id="_toDocTransbordos" uri="direct:docTransbordos"/>
+                            <to id="_toDocVistosBuenos" uri="direct:docVistosBuenos"/>
+                            <to id="_toDocCargos" uri="direct:DocCargos"/>
+                            <to id="_toDocItems" uri="direct:items"/>
+                            <to id="_toDocEstado" uri="direct:docEstado"/>
+                            <to id="_toDocImagen" uri="direct:docImagen"/>
+                        </multicast>
+                    </otherwise>
+                </choice>
+            </doTry>
+            <to id="_to8" uri="direct:procesaResultadoPersistencia"/>
+        </route>
+        <!-- GTIME ACEPTADA -->
+        <route id="_routeProcesaResultadoPersistencias">
+            <from id="_from2" uri="direct:procesaResultadoPersistencia"/>
+            <process id="_idProcessResultadoPersistencia" ref="_processResultadoPersistencia"/>
+            <choice id="_choice2">
+                <!-- GTIME PERSISTENCIA OK -->
+                <when id="_when1">
+                    <simple>${header.persistenciaExitosa} == true</simple>
+                    <setHeader headerName="evento" id="_setHeaderMsgTiempo2">
+                        <simple>${header.execTime}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaPersistenciaOK" uri="direct:trazabilidad"/>
+                    <!--<log id="_logExitoso" message="Procesamiento OK"/>-->
+                </when>
+                <!-- GTIME PERSISTENCIA OK -->
+                <!-- GTIME PERSISTENCIA NOK -->
+                <otherwise id="_otherwise2">
+                    <!--<log id="_logExistenErrores" message="Procesamiento Fallido"/>-->
+                    <setHeader headerName="evento" id="_setHeaderMsgTiempo3">
+                        <simple>${header.execTime}</simple>
+                    </setHeader>
+                    <wireTap id="_wireTapTrazaPersistenciaFail" uri="direct:trazabilidad"/>
+                    <to id="_to9" uri="direct:RollbackPersistencia"/>
+                </otherwise>
+                <!-- GTIME PERSISTENCIA NOK -->
+            </choice>
+            <!-- GTIME CAMBIO ESTADO -->
+            <wireTap id="_wireTapInsertAdmMensajesQueue2" uri="direct:actualizaQueue">
+                <body>
+                    <simple>${body}</simple>
+                </body>
+            </wireTap>
+            <!-- GTIME CAMBIO ESTADO -->
+        </route>
+    </camelContext>
+</beans>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd  http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                           http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <camelContext allowUseOriginalMessage="false"
+        id="gtime-trazador-camel-context"  xmlns="http://camel.apache.org/schema/spring">
+        <route id="_routeDesencoladoTraza">
+            <from id="_fromTraza" uri="jms:queue:jmsTrazaGtime?jmsMessageType=Object"/>
+            <convertBodyTo id="_convertBodyTo1" type="cl.gob.sna.gtime.modelo.vo.DetalleLog"/>
+            <bean id="_beanPersistDetalleLogTo"
+                method="persistDetalleLog" ref="_beanPersistDetalleLogBean"/>
+            <log id="_logMainTrazador" message="[gtime-trazador] -> ${header.msgLog}" />
+        </route>
+    </camelContext>
+    <bean class="cl.gob.sna.gtime.trazador.bean.PersistDetalleLogBean" id="_beanPersistDetalleLogBean"/>
+    <bean class="cl.gob.sna.gtime.trazador.repo.DocDetalleLogRepository" id="_repoDocDetalleLog"/>
+</beans>

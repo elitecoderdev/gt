@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:soap="http://cxf.apache.org/bindings/soap"
+	xmlns:cxf="http://camel.apache.org/schema/cxf"
+	xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+	xsi:schemaLocation=" 
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
+	http://cxf.apache.org/bindings/soap http://cxf.apache.org/schemas/configuration/soap.xsd 
+	http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd          
+    http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd
+    http://cxf.apache.org/transports/http/configuration
+    http://cxf.apache.org/schemas/configuration/http-conf.xsd">
+
+	
+	
+<!-- 	<cxf:cxfEndpoint id="autorizacionSalidaEndPoint" -->
+<!-- 	    wsdlURL="wsdl/ArgAutorizacionSalida.wsdl" -->
+<!-- 		serviceClass="swvehiculos.aduana.cl.AutorizacionSalidaEndPoint"  -->
+<!-- 		address="/AutorizacionSalida" -->
+<!-- 		endpointName="ws:AutorizacionSalidaImplPort"		 -->
+<!-- 		serviceName="ws:AutorizacionSalida" -->
+<!-- 		xmlns:ws="cl.aduana.swVehiculos"> -->
+<!-- 	</cxf:cxfEndpoint> -->
+						
+<!-- 	<bean id="authenticationInterceptor" class="org.apache.cxf.interceptor.security.JAASLoginInterceptor"> -->
+<!-- 	   <property name="contextName" value="global"/> -->
+<!-- 	   <property name="roleClassifier" value="23"/>	   	    -->
+<!-- 	</bean> -->
+	
+<!-- 	<http-conf:conduit name="*.http-conduit"> -->
+<!-- 		<http-conf:client ProxyServer="proxy.aduana.cl" ProxyServerPort="8080" />   -->
+<!-- 	</http-conf:conduit> -->
+
+<!-- 	<soap:server id="soapcont" address="/"> -->
+<!-- 		<soap:providers> -->
+<!--             <ref bean="jaxbProvider" /> -->
+<!--         </soap:providers> -->
+<!-- 	</soap:server> -->
+
+	<bean id="jaxbProvider" class="org.apache.cxf.jaxrs.provider.JAXBElementProvider">
+        <property name="marshallerProperties">
+            <map>
+                <entry>
+                    <key>
+                        <value>com.sun.xml.bind.marshaller.CharacterEscapeHandler</value>
+                    </key>
+                    <ref bean="cdataCharacterEscapeHandler" /> 
+                </entry>
+            </map>
+        </property>
+    </bean>
+ 
+    <bean id="cdataCharacterEscapeHandler" class="cl.gob.sna.gtime.cron.reencolador.utils.CustomCharacterEscapeHandler"/>
+
+ 	
+</beans>

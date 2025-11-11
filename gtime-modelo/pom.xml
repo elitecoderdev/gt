@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>cl.gob.sna.gtime</groupId>
+	<artifactId>gtime-modelo</artifactId>
+	<version>1.0.0</version>
+	<name>gtime-modelo</name>
+
+	<properties>
+		<java.version>1.7</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<lombok.version>1.18.2</lombok.version>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.0.redhat-00003</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>2.8.11</version>
+		</dependency>
+
+	</dependencies>
+	
+		<pluginRepositories>
+		<pluginRepository>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>central</id>
+			<name>central</name>
+			<url>https://repo1.maven.org/maven2/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>rh-ga</id>
+			<name>FuseSource Release Repository</name>
+			<url>https://maven.repository.redhat.com/ga/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>fusesource</id>
+			<name>FuseSource Release Repository</name>
+			<url>https://repo.fusesource.com/nexus/content/groups/public/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>fusesource.ea</id>
+			<name>FuseSource Community Early Access Release Repository</name>
+			<url>https://repo.fusesource.com/nexus/content/groups/ea</url>
+		</pluginRepository>
+		<pluginRepository>
+			<releases>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<id>redhat-techpreview-all-repository</id>
+			<name>Red Hat Tech Preview repository (all)</name>
+			<url>http://maven.repository.redhat.com/techpreview/all/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

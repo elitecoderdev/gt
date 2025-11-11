@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd  http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd                           http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <camelContext allowUseOriginalMessage="false"
+        id="gtime-orchestator-camel-context" xmlns="http://camel.apache.org/schema/spring">
+        <propertyPlaceholder id="configProp" location="file:${configuration-gtime}/gtime-rabbit.properties"/>
+        <route id="_routeConsumeRabbitMQ">
+             <from id="_fromRabbitMQ"
+                  uri="rabbitmq:{{gtime.rabbit.http.exchange}}?connectionFactory=#rabbitConnectionFactory&amp;autoDelete={{gtime.rabbit.opt.autodelete}}&amp;queue={{gtime.rabbit.http.queue}}&amp;routingKey={{gtime.rabbit.http.routingkey}}&amp;concurrentConsumers={{gtime.rabbit.opt.consumers}}&amp;automaticRecoveryEnabled={{gtime.rabbit.opt.autorecovery}}&amp;connectionTimeout=120000&amp;requestTimeout=80000&amp;requestedHeartbeat=60000" />
+           <doTry id="_doTryConvert">
+               <unmarshal id="_unmarshal_gtime_str_vo">
+                    <json id="payloadJson" library="Jackson" allowJmsType="true" prettyPrint="true"
+                          unmarshalTypeName="cl.gob.sna.gtime.orchestrator.vo.aws.PayloadVO"/>
+               </unmarshal>
+               <setHeader name="payLoad" id="_setHeaderDocumento">
+                   <simple>${body}</simple>
+               </setHeader>
+               <process id="_process_separacion_vo" ref="_processSplitPayload"/>
+               <marshal id="_marshal_dto_to_json">
+                   <json allowJmsType="true" library="Jackson" prettyPrint="true"/>
+               </marshal>
+               <setHeader name="gtimeVo" id="_setHeaderGtimeVo">
+                   <simple>${body}</simple>
+               </setHeader>
+            </doTry>
+            <log id="_logHeaderPayload" message="[gtime-orchestator] -> [IdPayload : (${header.idPayload})]"/>
+            <choice id="_choiceGtimeIngreso">
+                <when id="_when_tipo_doc_gtime_and_tipo_accion_ingreso">
+                    <simple>${header.idPayload} != null</simple>
+                    <removeHeaders id="_removeHeadersPreValidacion" pattern="*"/>
+                    <setHeader name="Content-Type" id="h_content_type_n1">
+                        <constant>application/json</constant>
+                    </setHeader>
+                    <to id="_toProcessDesencolado" uri="jms:queue:jmsGtimeDesencoladorQueue?jmsMessageType=Object"/>
+                </when>
+                <otherwise id="_otherwise1">
+                    <log id="_logNotSupported" message="Operacion no soportada"/>
+                </otherwise>
+            </choice>
+        </route>
+    </camelContext>
+    <bean class="cl.gob.sna.gtime.orchestrator.procesors.ProcessPayload" id="_processSplitPayload"/>
+    <!--<bean class="cl.gob.sna.gtime.orchestrator.bean.QueueBean" id="_beanQueued"/>-->
+</beans>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:http="http://cxf.apache.org/transports/http/configuration"
+    xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:sec="http://cxf.apache.org/configuration/security"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans            http://www.springframework.org/schema/beans/spring-beans.xsd             http://camel.apache.org/schema/spring            http://camel.apache.org/schema/spring/camel-spring.xsd           http://www.springframework.org/schema/util            http://www.springframework.org/schema/util/spring-util-4.2.xsd http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd                http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+    <routeContext id="cron-notificacion-087" xmlns="http://camel.apache.org/schema/spring">
+  <route streamCache="true" id="_routeCronNotificacion087">
+    <from uri="quartz2://dataNotificacion087Quartz?cron={{cl.gob.sna.pda.cron.notif087.quartz.expression}}" id="_from1">
+      <description/>
+    </from>
+    <doTry id="try_pda-cmp-cron-087">
+      <log message="[PDA-CRON-087] - Iniciando tarea Programada..." id="_logInicio"/>
+      <to uri="direct:obtenerListaEnviosNotificacion87" id="_toobtenerListaEnvios"/>
+      <doFinally id="finally_pda-cmp-cron-087">
+        <setHeader headerName="KEY_DOCUMENTO_OUT" id="_set_DOCUMENTO_OUT">
+          <simple resultType="java.lang.String">${body}</simple>
+        </setHeader>
+        <log message="[PDA-CRON-087] - Fin tarea Programada." id="_logIFin"/>
+      </doFinally>
+    </doTry>
+  </route>
+  <route streamCache="true" id="_SQL">
+    <from uri="direct:obtenerListaEnviosNotificacion87" id="_fromObtenerListaEnviosNotificacion">
+      <description/>
+    </from>
+    <setBody id="_setSQL">
+      <simple id="_query_ObtenerListaEnviosNotificacion">{{query.proceso.notificacion.087}}</simple>
+    </setBody>
+    <to uri="jdbc:dataSourcePostal" id="_toJdbcObtenerListaEnviosNotificacion"/>
+    <setHeader headerName="RESULT_SET" id="_setHeader1">
+      <simple>${body}</simple>
+    </setHeader>
+  </route>
+  <route streamCache="true" id="_ProcesaListaEnviosNotificacion">
+    <from uri="direct:procesaListaEnviosNotificacion" id="_fromProcesaListaEnviosNotificacion">
+      <description/>
+    </from>
+    <log message="[PDA] Inicio procesamiento de ListaEnviosNotificacion " id="_log3"/>
+    <split streaming="true" id="_split1">
+      <simple>${body}</simple>
+      <to uri="direct:encolarEventoNotificacionWS87" id="_toEcolarSalida"/>
+      <to uri="mock:result" id="_to2"/>
+    </split>
+  </route>
+  <route id="_EncolamientoJMSWS87">
+    <from uri="direct:encolarEventoNotificacionWS87" id="_jmsEventoOut">
+      <description/>
+    </from>
+    <log message="[PDA] Inicio de  Encolamiento EventoNotificacion WS87" id="_logEncolamientoIni"/>
+    <marshal id="_marshalToJson">
+      <json library="Jackson" allowJmsType="true"/>
+    </marshal>
+    <convertBodyTo type="java.lang.String" id="_convertBodyTo1"/>
+    <log message="[PDA] Cmp-Eventos -&gt; ENCOLANDO en JMS EnvioNotificacionJson-&gt; ${body}" id="_logEventoCLI"/>
+    <to uri="jms:queue:jmsPDACron087Out?jmsMessageType=Text&amp;testConnectionOnStartup=true&amp;consumerType=Custom" id="_toJmsPDACron087Evento"/>
+    <log message="[PDA] Cmp-Eventos -&gt;  ENCOLADO JMS EnvioNotificacionJson OK" id="_logEventoCLI"/>
+  </route>
+</routeContext>
+</beans>

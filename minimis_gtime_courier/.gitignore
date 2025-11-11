@@ -1,0 +1,32 @@
+# .gitignore
+node_modules/
+dist/
+*.log
+.env
+.env.local
+.env.*.local
+coverage/
+.nyc_output/
+*.swp
+*.swo
+.DS_Store
+.vscode/
+.idea/
+*.tsbuildinfo
+.aws-sam/
+samconfig.toml
+
+# Testing
+*.test.js
+*.spec.js
+
+# Build artifacts
+build/
+*.zip
+
+# OS
+Thumbs.db
+
+
+
+

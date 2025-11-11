@@ -1,0 +1,32 @@
+# Ejemplo de configuración CDK Context
+
+Copia este archivo a `cdk.context.json` y configura los valores apropiados:
+
+```json
+{
+  "databaseHost": "your-rds-host.region.rds.amazonaws.com",
+  "databasePort": 1521,
+  "databaseName": "DOCUMENTOS",
+  "databaseSecretArn": "arn:aws:secretsmanager:region:account:secret:db-credentials",
+  "eventBusName": "gtime-courier-bus",
+  "environment": "dev"
+}
+```
+
+## Alternativa: Variables de entorno
+
+También puedes pasar los valores como parámetros de contexto:
+
+```bash
+cdk deploy \
+  --context databaseHost=your-rds-host.region.rds.amazonaws.com \
+  --context databasePort=1521 \
+  --context databaseName=DOCUMENTOS \
+  --context databaseSecretArn=arn:aws:secretsmanager:region:account:secret:db-credentials \
+  --context eventBusName=gtime-courier-bus \
+  --context environment=dev
+```
+
+
+
+
